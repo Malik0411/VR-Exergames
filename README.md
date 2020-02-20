@@ -9,9 +9,11 @@ A collection of the code used to analyze data collected from an OculusQuest VR h
 **Install using pip**: You can use a prompt such as PowerShell, or Git Bash to install the package. Make sure you have a newer version of python installed, I'm using 3.7.4 for the entirety of this analysis.
 
 ````$pip install mayavi```` 
+
 ````$pip install PyQt5````
 
-- **Note**: This process did not work for me
+
+**Note**: This process did not work for me
 
 ### Second Method
 #### Install using Anaconda
