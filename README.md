@@ -23,7 +23,8 @@ A collection of the code used to analyze data collected from an OculusQuest VR h
 #### Install using mayavi-pip (through Anaconda)
 1. Run the Anaconda Prompt as Administrator.
 2. Execute the following commands:
-````conda create --name mayavi-pip python=3.7 vtk numpy traitsui configobj six
+````
+conda create --name mayavi-pip python=3.7 vtk numpy traitsui configobj six
 conda activate mayavi-pip
 pip --no-cache-dir install mayavi
 ````
