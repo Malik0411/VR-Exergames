@@ -1,5 +1,4 @@
 import numpy as np
-# from scipy import interpolate
 from mayavi.mlab import *
 from mayavi import mlab
 import csv
@@ -67,7 +66,6 @@ if __name__ == "__main__":
     # LP = np.asarray(lposition)
     # z = np.array([z_function(x,y) for (x,y) in zip(np.ravel(xx), np.ravel(yy))])
     # zz = z.reshape(xx.shape)
-    # # zz = interpolate.griddata((LP[:,0], LP[:,1]), LP[:,2], (xx, yy), method='nearest')
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
