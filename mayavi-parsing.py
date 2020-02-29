@@ -1,8 +1,12 @@
 import numpy as np
-from scipy import interpolate
+# from scipy import interpolate
 from mayavi.mlab import *
 from mayavi import mlab
 import csv
+
+# Look at Quiver 3d from axes 3d
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
 
 def plot_with_quiver3d(x, y, z):
     r = np.sqrt(x ** 2 + y ** 2 + z ** 4)
@@ -12,8 +16,13 @@ def plot_with_quiver3d(x, y, z):
     obj = quiver3d(x, y, z, u, v, w, line_width=3, scale_factor=1)
     return obj
 
+def plot_with_contour3d(x, y, z):
+    scalars = x * x * 0.5 + y * y + z * z * 2.0
+    obj = contour3d(x, y, z, scalars, contours=4, transparent=True)
+    return obj
+
 if __name__ == "__main__":
-    with open('C:/Users/Malik/Documents/University of Waterloo/3A/URA/Wrist-Flick Up x2, Wrist-Flick Side x2.csv') as csv_file:
+    with open('C:/Users/Malik/Documents/University of Waterloo/3A/URA/2020-02-29/Left Side, Circular Motion.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line = 0
         lposition = []; rposition = []; lvelocity = []; rvelocity = []; laccel = []; raccel = []
@@ -31,21 +40,36 @@ if __name__ == "__main__":
 
     x = []; y = []; z = []
     for i in range(0, line-1):
-        x.append(raccel[i][0])
-        y.append(raccel[i][1])
-        z.append(raccel[i][2])
+        x.append(lvelocity[i][0])
+        y.append(lvelocity[i][1])
+        z.append(lvelocity[i][2])
     x = np.asarray(x); y = np.asarray(y); z = np.asarray(z)
-
+    
+    # 3D Quiver Plotting with mayavi (better velocity representation)
     plot_with_quiver3d(x, y, z)
     mlab.show()
 
-    ## Method 1 (Fast) but makes z mesh nxn (very large for lots of data)
+    # # 3D Quiver Plotting with mplotlib (better position representation)
+    # fig = plt.figure()
+    # ax = fig.gca(projection='3d')
+
+    # # Make the direction data for the arrows
+    # u = np.sin(np.pi * x) * np.cos(np.pi * y) * np.cos(np.pi * z)
+    # v = -np.cos(np.pi * x) * np.sin(np.pi * y) * np.cos(np.pi * z)
+    # w = (np.sqrt(2.0 / 3.0) * np.cos(np.pi * x) * np.cos(np.pi * y) * np.sin(np.pi * z))
+    # ax.quiver(x, y, z, u, v, w, length=0.1, normalize=True)
+    # plt.show()
+
+    # # 3D Plane Wire Frame Graph Chart
     # xx, yy = np.meshgrid(x,y)
     # def z_function(x,y):
     #     return np.sqrt(x**2 + y**2)
     # LP = np.asarray(lposition)
     # z = np.array([z_function(x,y) for (x,y) in zip(np.ravel(xx), np.ravel(yy))])
     # zz = z.reshape(xx.shape)
+    # # zz = interpolate.griddata((LP[:,0], LP[:,1]), LP[:,2], (xx, yy), method='nearest')
 
-    ## Method 2 (Too slow)
-    # zz = interpolate.griddata((LP[:,0], LP[:,1]), LP[:,2], (xx, yy), method='nearest')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.plot_wireframe(xx,yy,zz, rstride=10, cstride=10)
+    # plt.show()
