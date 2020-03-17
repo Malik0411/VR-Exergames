@@ -42,12 +42,8 @@ if __name__ == "__main__":
 
     x = []; y = []; z = []; xp = []; yp = []; zp = []
     for i in range(0, line-1):
-        xp.append(lposition[i][0])
-        yp.append(lposition[i][1])
-        zp.append(lposition[i][2])
-        x.append(lvelocity[i][0])
-        y.append(lvelocity[i][1])
-        z.append(lvelocity[i][2])
+        xp.append(lposition[i][0]); yp.append(lposition[i][1]); zp.append(lposition[i][2])
+        x.append(lvelocity[i][0]); y.append(lvelocity[i][1]); z.append(lvelocity[i][2])
     x = np.asarray(x); y = np.asarray(y); z = np.asarray(z)
     xp = np.asarray(xp); yp = np.asarray(yp); zp = np.asarray(zp)
     
