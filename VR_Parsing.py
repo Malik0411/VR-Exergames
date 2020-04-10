@@ -31,8 +31,7 @@ def plot_with_quiver3d(x, y, z):
             z: numpy array of data arranged along the z-axis
 
     """
-    # Component vectors used to calculate the direction 
-    # of the quiver arrows (standard calculation, see mayavi docs)
+    # Component vectors used to calculate the direction of the quiver arrows (standard calculation, see mayavi docs)
     r = np.sqrt(x ** 2 + y ** 2 + z ** 4)
     u = y * np.sin(r) / (r + 0.001)
     v = -x * np.sin(r) / (r + 0.001)
@@ -49,19 +48,69 @@ def plot_with_triangular_mesh(x, y, z, n):
             x: numpy array of data arranged along the x-axis
             y: numpy array of data arranged along the y-axis
             z: numpy array of data arranged along the z-axis
-            n: number of triangles to create
+            n: number of triangles to create (must be the esame as the number of data points)
             
     """
     # Scalars calculation to describe the extremity of the triangles
     t = np.linspace(-np.pi, np.pi, n)
+
     # Creating the list of tuples for triangle vertices
     triangles = [(0, i, i + 1) for i in range(1, n)]
+    
+    # Producing the axial data and plotting it
     x = np.r_[0, x]
     y = np.r_[0, y]
     z = np.r_[1, z]
     t = np.r_[0, t]
     triangular_mesh(x, y, z, triangles, scalars=t)
     mlab.show()
+
+
+def spider_plot(n, parameters, parameter_data):
+    """
+        This function is used to visualize headset data using a spider (radar) plot
+
+        Args:
+            n: number of parameters to be used on the spider plot            
+            parameters (list): names of parameters to be used on the spider plot
+            parameter_data (list): data on the parameter data plotting on the spider plot
+
+    """
+    # Creating the geometric shape based on number of parameters
+    theta = radar_factory(n, frame='polygon')
+
+    # Producing the data set based on given parameters
+    data = [parameters, ('OculusQuest VR Data', [parameter_data])]
+    spoke_labels = data.pop(0)
+    title, case_data = data[0]
+
+    # Creating the plot accoridng to the mplotlib definition of radar plots
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(projection='radar'))
+    fig.subplots_adjust(top=0.85, bottom=0.05)
+    ax.set_rgrids([0.2, 0.4, 0.6, 0.8])
+    ax.set_title(title,  position=(0.5, 1.1), ha='center')
+
+    # Plotting each data point on the chart
+    for d in case_data:
+        ax.plot(theta, d)
+        ax.fill(theta, d, alpha=0.25)
+    ax.set_varlabels(spoke_labels)
+    plt.show()
+
+def scatter_plot(x, y, z):
+    """
+        This function is used to visualize a scatter plot of the headset data
+
+        Args:
+            x: numpy array of data arranged along the x-axis
+            y: numpy array of data arranged along the y-axis
+            z: numpy array of data arranged along the z-axis
+
+    """
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.scatter(x, y, z, marker='o')
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -100,8 +149,8 @@ if __name__ == "__main__":
     for i in range(0, data_points):
         # Appending the position and velocity (currently left controller, but could be either left or right)
         # These are used when calculating rps and then determining if the user changes circle diameter drastically
-        xp = np.append(xp, lposition[i][0]); yp = np.append(yp, lposition[i][1]); zp = np.append(lposition[i][2])
-        xv = np.append(xp, lvelocity[i][0]); yv = np.append(yp, lvelocity[i][1]); zv = np.append(lvelocity[i][2])
+        xp = np.append(xp, lposition[i][0]); yp = np.append(yp, lposition[i][1]); zp = np.append(zp, lposition[i][2])
+        xv = np.append(xv, lvelocity[i][0]); yv = np.append(yv, lvelocity[i][1]); zv = np.append(zv, lvelocity[i][2])
 
         # Appending the magnitude of the x, y, z data for position, velocity, and acceleration
         # These are used when crafting features for the spider plot
@@ -109,55 +158,20 @@ if __name__ == "__main__":
         lv = np.append(lv, np.linalg.norm(lvelocity[i])); rv = np.append(rv, np.linalg.norm(rvelocity[i]))
         la = np.append(la, np.linalg.norm(laccel[i])); ra = np.append(ra, np.linalg.norm(raccel[i]))
 
-    # # Spider Plot Parameters (types of features can change as desired)
-    # lp = max(lp); rp = max(rp)
-    # lv = sum(lv)/len(lv); rv = sum(rv)/len(rv)
-    # la = sum(la)/len(la); ra = sum(ra)/len(ra)
+    # Quiver 3D plotting
+    plot_with_quiver3d(xv, yv, zv)
 
-    # # 3D Quiver Plotting
-    # plot_with_quiver3d(x, y, z)
+    # Triangular Mesh
+    plot_with_triangular_mesh(xv, yv, zv, data_points)
 
-    # # Triangular Mesh
-    # plot_with_triangular_mesh(x, y, z, data_points)
+    # Spider plot visualization
+    N = 6
+    parameters = ['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA']
+    parameter_data = [max(lp), max(rp), sum(lv)/len(lv), sum(rv)/len(rv), sum(la)/len(la), sum(ra)/len(ra)]
+    spider_plot(N, parameters, parameter_data)
 
-    # # Spider Plot Visualization
-    # N = 6
-    # theta = radar_factory(N, frame='polygon')
-    # data = [['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA'], ('OculusQuest VR Data', [
-    #     [lp, rp, lv, rv, la, ra]
-    #     ])]
-    # spoke_labels = data.pop(0)
-    # title, case_data = data[0]
-
-    # fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(projection='radar'))
-    # fig.subplots_adjust(top=0.85, bottom=0.05)
-    # ax.set_rgrids([0.2, 0.4, 0.6, 0.8])
-    # ax.set_title(title,  position=(0.5, 1.1), ha='center')
-
-    # for d in case_data:
-    #     ax.plot(theta, d)
-    #     ax.fill(theta, d, alpha=0.25)
-    # ax.set_varlabels(spoke_labels)
-
-    # plt.show()
-
-    # # Scatter visualization
-    # fig = plt.figure()
-    # ax = Axes3D(fig)
-    # ax.scatter(xp, yp, zp, marker='o')
-    # plt.show()
-
-    # # 3D Plane Wire Frame Graph Chart
-    # xx, yy = np.meshgrid(x,y)
-    # def z_function(x,y):
-    #     return np.sqrt(x**2 + y**2)
-    # LP = np.asarray(lposition)
-    # z = np.array([z_function(x,y) for (x,y) in zip(np.ravel(xx), np.ravel(yy))])
-    # zz = z.reshape(xx.shape)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.plot_wireframe(xx,yy,zz, rstride=10, cstride=10)
-    # plt.show()
+    # Scatter Plot of position data
+    scatter_plot(xp, yp, zp)
 
     # # Calculation of Circle Radius
     # # Started by idealizing data to use Z and Y data points and excluding slight variations due to arm motion in X direction.
