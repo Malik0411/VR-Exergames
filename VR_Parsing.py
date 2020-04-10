@@ -128,7 +128,7 @@ def get_circle_radius(y, z):
 
     """
     # Started by idealizing data to use Y and Z data points and excluding slight variations due to arm motion in X direction.
-    data = np.column_stack((yp,zp))
+    data = np.column_stack((y,z))
     # Calculation is best with positional data, since this more accurately defines the perimeter of the circle
     xc, yc, r, variance = cf.least_squares_circle(data)
     return r
@@ -219,6 +219,12 @@ def get_changed_circle_size(rps, data, time, tolerance=0.15):
         for i in range(start, end):
             y, z = np.append(y, data[i][1]), np.append(z, data[i][2])
         curr = get_circle_radius(y, z)
+        
+        # Disregard if the radius is greater than 1m (likely an invalid calculation)
+        if curr > 1:
+            curr = prev
+            start = end
+            end += int(freq/rps)
 
         # Determine if the circles differ by the given tolerance
         if prev != 0 and abs(curr - prev) > tolerance:
@@ -299,5 +305,7 @@ if __name__ == "__main__":
     # print('{0:.2f} rps'.format(get_rps(yv, zv, time)))
 
     # Identifying drastic change in diameters of the circles made by the user
-    changes = get_changed_circle_size(get_rps(yv, zv, time), lposition, time, tolerance=0)
-    print('The user drastically changed diameters {} times, from (circle1, circle2) in: {}'.format(len(changes), changes))
+    changes = get_changed_circle_size(get_rps(yv, zv, time), rposition, time)
+    print('The user drastically changed diameters {} times, from:'.format(len(changes)))
+    for i in range(0, len(changes)):
+        print('Previous: {0:.2f}m, Current: {1:.2f}m'.format(changes[i][0], changes[i][1]))
