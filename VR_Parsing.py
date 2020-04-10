@@ -123,7 +123,7 @@ if __name__ == "__main__":
     with open('C:/Users/Malik/Documents/University of Waterloo/3A/URA/2020-03-13/Malik Rowing.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line = 0
-        time = []; lposition = []; rposition = []; lvelocity = []; rvelocity = []; laccel = []; raccel = []
+        time, lposition, rposition, lvelocity, rvelocity, laccel, raccel = [], [], [], [], [], [], []
         for row in csv_reader:
             # Skip the first line since it does not contain useful data
             if line == 0:
@@ -144,19 +144,20 @@ if __name__ == "__main__":
     data_points = 12000
     
     # Array initialization to store the number of desired data points
-    xv = []; yv = []; zv = []; xp = []; yp = []; zp = []
-    lp = []; rp = []; lv = []; rv = []; la = []; ra = []
+    xv, yv, zv, xp, yp, zp = [], [], [], [], [], []
+    lp, rp, lv, rv, la, ra = [], [], [], [], [], []
+
     for i in range(0, data_points):
         # Appending the position and velocity (currently left controller, but could be either left or right)
         # These are used when calculating rps and then determining if the user changes circle diameter drastically
-        xp = np.append(xp, lposition[i][0]); yp = np.append(yp, lposition[i][1]); zp = np.append(zp, lposition[i][2])
-        xv = np.append(xv, lvelocity[i][0]); yv = np.append(yv, lvelocity[i][1]); zv = np.append(zv, lvelocity[i][2])
+        xp, yp, zp = np.append(xp, lposition[i][0]), np.append(yp, lposition[i][1]), np.append(zp, lposition[i][2])
+        xv, yv, zv = np.append(xv, lvelocity[i][0]), np.append(yv, lvelocity[i][1]), np.append(zv, lvelocity[i][2])
 
         # Appending the magnitude of the x, y, z data for position, velocity, and acceleration
         # These are used when crafting features for the spider plot
-        lp = np.append(lp, np.linalg.norm(lposition[i])); rp = np.append(rp, np.linalg.norm(rposition[i]))
-        lv = np.append(lv, np.linalg.norm(lvelocity[i])); rv = np.append(rv, np.linalg.norm(rvelocity[i]))
-        la = np.append(la, np.linalg.norm(laccel[i])); ra = np.append(ra, np.linalg.norm(raccel[i]))
+        lp, rp = np.append(lp, np.linalg.norm(lposition[i])), np.append(rp, np.linalg.norm(rposition[i]))
+        lv, rv = np.append(lv, np.linalg.norm(lvelocity[i])), np.append(rv, np.linalg.norm(rvelocity[i]))
+        la, ra = np.append(la, np.linalg.norm(laccel[i])), np.append(ra, np.linalg.norm(raccel[i]))
 
     # Quiver 3D plotting
     plot_with_quiver3d(xv, yv, zv)
