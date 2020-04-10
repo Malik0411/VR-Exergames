@@ -10,6 +10,7 @@
 
 
 import csv
+import warnings
 import numpy as np
 from re import split
 from mayavi import mlab
@@ -113,6 +114,123 @@ def scatter_plot(x, y, z):
     plt.show()
 
 
+def get_circle_radius(y, z):
+    """
+        This function uses the circle fit library to approximate the circle radius for a set of y and z data
+        Note: used y and z because these are the axes of motion used when making circles with the controllers
+
+        Args:
+            y: numpy array of data arranged along the y-axis
+            z: numpy array of data arranged along the z-axis
+        
+        Returns:
+            The calculated radius for the provided dataset
+
+    """
+    # Started by idealizing data to use Y and Z data points and excluding slight variations due to arm motion in X direction.
+    data = np.column_stack((yp,zp))
+    # Calculation is best with positional data, since this more accurately defines the perimeter of the circle
+    xc, yc, r, variance = cf.least_squares_circle(data)
+    return r
+
+
+def angle_between(p1, p2):
+    """
+        This is a helper function used to calculate the angle between two points
+
+        Args:
+            p1: first data point, consisting of (y, z) data at a current time
+            p2: second data point, consisting of (y, z) data at the next time
+        
+        Returns:
+            The calculated angle between the two data points
+
+    """
+    # Calculation of angle between y, z points
+    deltay = p2[0] - p1[0]
+    deltaz = p2[1] - p1[1]
+    return np.arctan2(deltaz, deltay)
+
+
+def get_rps(y, z, time):
+    """
+        This function is used to calculate the rps data based on the velocity difference between each data point
+        Note: used y and z because these are the axes of motion used when making circles with the controllers
+
+        Args:
+            y: numpy array of data arranged along the y-axis
+            z: numpy array of data arranged along the z-axis
+            time: list of time data for each data point
+        
+        Returns:
+            The calculated revolutions per second for the given dataset
+
+    """
+    # Ignore runtime warnings (occurs due to nan, and inf calculations)
+    warnings.filterwarnings("ignore")
+
+    # Started by idealizing data to use Y and Z data points and excluding slight variations due to arm motion in X direction.
+    data = np.column_stack((y,z))
+    
+    angularData, angularVelocity = [], []
+    for i in range(0, len(data)-2):
+        # Calculating the angle between the next two data points
+        angularData.append(angle_between((data[i][0], data[i][1]), (data[i+1][0], data[i+1][1])))
+        angularData.append(angle_between((data[i+1][0], data[i+1][1]), (data[i+2][0], data[i+2][1])))
+
+        # Calculating the angular velocity (rad/s) based on the next two angular data points
+        # Division of time is next(minutes + seconds + milliseconds) - current(minutes + seconds + milliseconds)
+        angularVelocity.append((angularData[i+1]-angularData[i])/((60*time[i+1][0]+time[i+1][1]+time[i+1][2]/1000)-(60*time[i][0]+time[i][1]+time[i][2]/1000)))
+        
+    # Parsing out the invalid values (typically due to negligible time difference between points)
+    angularVelocity = [x for x in angularVelocity if str(x) != 'nan' and str(x) != 'inf' and str(x) != '-inf'] 
+    
+    # Averaging the calculated rate for each point
+    # 1 rad/s = 6.2831853108075 rps
+    return abs((sum(angularVelocity)/len(angularVelocity))/6.2831853108075)
+
+
+def get_changed_circle_size(rps, data, time, tolerance=0.15):
+    """
+        This function is used to identify when the user drastically changes the size of the circles they are making
+        Sensitivity of detection can be adjusted by setting the tolerance argument
+
+        Args:
+            rps: the number of revolutions per second, to determine the creation of each circle
+            data: the set of x, y, z data
+            time: list of time data for each data point
+            tolerance: the tolerance to use when determining how 'drastically' the circles change
+        
+        Returns:
+            The list of circles that changed as tuples (circle1, circle2)
+
+    """
+    # Frequency of data collection (total number of points / total time)
+    freq = len(data)/((60*time[len(data)-1][0]+time[len(data)-1][1]+time[len(data)-1][2]/1000)-(60*time[0][0]+time[0][1]+time[0][2]/1000))
+    
+    # List to hold the radii of the circles that changed
+    changes = []
+
+    # End signifies the approximate number of data points for the player to make a circle
+    start, prev, curr, end = 0, 0, 0, int(freq/rps)
+    while end <= len(data):
+        y, z = [], []
+        # Compile y and z data points that make an approximate circle
+        for i in range(start, end):
+            y, z = np.append(y, data[i][1]), np.append(z, data[i][2])
+        curr = get_circle_radius(y, z)
+
+        # Determine if the circles differ by the given tolerance
+        if prev != 0 and abs(curr - prev) > tolerance:
+            changes.append((prev, curr))
+
+        prev = curr
+        start = end
+        end += int(freq/rps)
+
+    return changes
+
+
 if __name__ == "__main__":
     # Data used for processing has the following characteristics:
     # 0-12000 (forward rowing)
@@ -121,24 +239,24 @@ if __name__ == "__main__":
     # 25000-31000 (forward right-hand rowing only)
     # 31000-end (forward left-hand rowing only)
     with open('C:/Users/Malik/Documents/University of Waterloo/3A/URA/2020-03-13/Malik Rowing.csv') as csv_file:
+        # Skip the first line of the file (not useful)
+        next(csv_file)
+
+        # Parse through the, denoting for csv files
         csv_reader = csv.reader(csv_file, delimiter=',')
-        line = 0
         time, lposition, rposition, lvelocity, rvelocity, laccel, raccel = [], [], [], [], [], [], []
+
         for row in csv_reader:
-            # Skip the first line since it does not contain useful data
-            if line == 0:
-                line += 1
-                continue
+            # Partitioned tabs, and removed extra spacing from time data, then converted to float
+            time.append([float(x) for x in split(r'\D+', row[0].rpartition('\t')[0][12:-3])])
+
             # Parsing the raw data from the csv file at the correct indices
-            # Converted to float where possible, partitioned tabs, and removed extra spacing
-            time.append(split(r'\D+', row[0].rpartition('\t')[0][12:-3]))
             lposition.append([float(row[0].rpartition('\t')[2][1:]), float(row[1]), float(row[2].rpartition('\t')[0][1:-1])])
             rposition.append([float(row[2].rpartition('\t')[2][1:]), float(row[3]), float(row[4].rpartition('\t')[0][1:-1])])
             lvelocity.append([float(row[4].rpartition('\t')[2][1:]), float(row[5]), float(row[6].rpartition('\t')[0][1:-1])])
             rvelocity.append([float(row[6].rpartition('\t')[2][1:]), float(row[7]), float(row[8].rpartition('\t')[0][1:-1])])
             laccel.append([float(row[8].rpartition('\t')[2][1:]), float(row[9]), float(row[10].rpartition('\t')[0][1:-1])])
             raccel.append([float(row[10].rpartition('\t')[2][1:]), float(row[11]), float(row[12][1:-1])])
-            line += 1
 
     # Amount of data you want to use for visualization
     data_points = 12000
@@ -159,68 +277,27 @@ if __name__ == "__main__":
         lv, rv = np.append(lv, np.linalg.norm(lvelocity[i])), np.append(rv, np.linalg.norm(rvelocity[i]))
         la, ra = np.append(la, np.linalg.norm(laccel[i])), np.append(ra, np.linalg.norm(raccel[i]))
 
-    # Quiver 3D plotting
-    plot_with_quiver3d(xv, yv, zv)
+    # # Quiver 3D plotting
+    # plot_with_quiver3d(xv, yv, zv)
 
-    # Triangular Mesh
-    plot_with_triangular_mesh(xv, yv, zv, data_points)
+    # # Triangular Mesh
+    # plot_with_triangular_mesh(xv, yv, zv, data_points)
 
-    # Spider plot visualization
-    N = 6
-    parameters = ['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA']
-    parameter_data = [max(lp), max(rp), sum(lv)/len(lv), sum(rv)/len(rv), sum(la)/len(la), sum(ra)/len(ra)]
-    spider_plot(N, parameters, parameter_data)
+    # # Spider plot visualization
+    # N = 6
+    # parameters = ['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA']
+    # parameter_data = [max(lp), max(rp), sum(lv)/len(lv), sum(rv)/len(rv), sum(la)/len(la), sum(ra)/len(ra)]
+    # spider_plot(N, parameters, parameter_data)
 
-    # Scatter Plot of position data
-    scatter_plot(xp, yp, zp)
+    # # Scatter Plot of position data
+    # scatter_plot(xp, yp, zp)
 
     # # Calculation of Circle Radius
-    # # Started by idealizing data to use Z and Y data points and excluding slight variations due to arm motion in X direction.
-    # data = np.column_stack((zp,yp))
-    # # Calculation is best with positional data, since this more accurately defines the perimeter of the circle
-    # xc, yc, r, variance = cf.least_squares_circle(data)
-    # print(r)
-    
-    # # To visualize the data points used for radius calculation
-    # plt.scatter(x, y)
-    # plt.show()
+    # print('{0:.2f}m'.format(get_circle_radius(yp, zp)))
 
-    # # Calculation of revolutions per second
-    # # Calculation of angle between x, y points
-    # def angle_between(p1, p2):
-    #     deltax = p2[0] - p1[0]
-    #     deltay = p2[1] - p1[1]
-    #     return np.arctan2(deltay, deltax)
-    
-    # angularData = []
-    # for i in range(0, len(data)-1):
-    #     angularData.append(angle_between((data[i][0], data[i][1]), (data[i+1][0], data[i+1][1])))
-    
-    # angularVelocity = []
-    # for i in range(0, len(angularData)-1):
-    #     angularVelocity.append((angularData[i+1]-angularData[i])/((float(time[i+1][1])+float(time[i+1][2])/1000)-(float(time[i][1])+float(time[i][2])/1000)))
-    # angularVelocity = [x for x in angularVelocity if str(x) != 'nan' and str(x) != 'inf' and str(x) != '-inf']
-    # rps = abs((sum(angularVelocity)/len(angularVelocity))/(0.104719755*60))
-    # print(rps)
+    # # Calculation of revolutions per second (using velocity because it is more precise than position)
+    # print('{0:.2f} rps'.format(get_rps(yv, zv, time)))
 
-    # # Identifying changing diameters of the circles made by the user
-    # start = 0; prev = 0
-    # # Frequency of data collection (calculated around 220Hz)
-    # end = int(220/rps); curr = 0
-    # while end <= data_points:
-    #     xp = []; yp = []; zp = []
-    #     for i in range(start, end):
-    #         xp.append(lposition[i][0])
-    #         yp.append(lposition[i][1])
-    #         zp.append(lposition[i][2])
-    #     xp = np.asarray(xp); yp = np.asarray(yp); zp = np.asarray(zp)
-        
-    #     data = np.column_stack((zp,yp))
-    #     curr = np.nanmax(sp.pdist(data))
-
-    #     if prev != 0 and curr > prev + 0.25:
-    #         print(prev, curr)
-    #     prev = curr
-    #     start = end
-    #     end += int(220/rps)
-        
+    # Identifying drastic change in diameters of the circles made by the user
+    changes = get_changed_circle_size(get_rps(yv, zv, time), lposition, time, tolerance=0)
+    print('The user drastically changed diameters {} times, from (circle1, circle2) in: {}'.format(len(changes), changes))
