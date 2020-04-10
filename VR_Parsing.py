@@ -305,7 +305,7 @@ if __name__ == "__main__":
     # print('{0:.2f} rps'.format(get_rps(yv, zv, time)))
 
     # Identifying drastic change in diameters of the circles made by the user
-    changes = get_changed_circle_size(get_rps(yv, zv, time), rposition, time)
+    changes = get_changed_circle_size(get_rps(yv, zv, time), lposition, time)
     print('The user drastically changed diameters {} times, from:'.format(len(changes)))
     for i in range(0, len(changes)):
         print('Previous: {0:.2f}m, Current: {1:.2f}m'.format(changes[i][0], changes[i][1]))
