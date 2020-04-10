@@ -3,8 +3,8 @@
     By: Malik Salvosa
 
     The contents of this script are to be used in visualizing the data of an OculusQuest VR headset
-    I have sectioned off the parts of the script that perform different tasks (uncomment as desired to test functionality)
-    Note: Other headsets can likely be used, although you may have to change how the .csv data output file is parsed
+    I have sectioned off the parts of the script that perform different tasks (comment as desired to test individual functionality)
+    Note: Other headsets can likely be used with my methods, although you may have to change how the .csv data output file is parsed
 
 """
 
@@ -238,7 +238,7 @@ def get_changed_circle_size(rps, data, time, tolerance=0.15):
 
 
 if __name__ == "__main__":
-    # Data used for processing has the following characteristics:
+    # The data file I used for processing has the following characteristics:
     # 0-12000 (forward rowing)
     # 12000-23000 (backwards rowing)
     # 23000-25000 (nothing)
@@ -283,26 +283,26 @@ if __name__ == "__main__":
         lv, rv = np.append(lv, np.linalg.norm(lvelocity[i])), np.append(rv, np.linalg.norm(rvelocity[i]))
         la, ra = np.append(la, np.linalg.norm(laccel[i])), np.append(ra, np.linalg.norm(raccel[i]))
 
-    # # Quiver 3D plotting
-    # plot_with_quiver3d(xv, yv, zv)
+    # Quiver 3D plotting
+    plot_with_quiver3d(xv, yv, zv)
 
-    # # Triangular Mesh
-    # plot_with_triangular_mesh(xv, yv, zv, data_points)
+    # Triangular Mesh
+    plot_with_triangular_mesh(xv, yv, zv, data_points)
 
-    # # Spider plot visualization
-    # N = 6
-    # parameters = ['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA']
-    # parameter_data = [max(lp), max(rp), sum(lv)/len(lv), sum(rv)/len(rv), sum(la)/len(la), sum(ra)/len(ra)]
-    # spider_plot(N, parameters, parameter_data)
+    # Spider plot visualization
+    N = 6
+    parameters = ['Max LP', 'Max RP', 'Avg LV', 'Avg RV', 'Avg LA', 'Avg RA']
+    parameter_data = [max(lp), max(rp), sum(lv)/len(lv), sum(rv)/len(rv), sum(la)/len(la), sum(ra)/len(ra)]
+    spider_plot(N, parameters, parameter_data)
 
-    # # Scatter Plot of position data
-    # scatter_plot(xp, yp, zp)
+    # Scatter Plot of position data
+    scatter_plot(xp, yp, zp)
 
-    # # Calculation of Circle Radius
-    # print('{0:.2f}m'.format(get_circle_radius(yp, zp)))
+    # Calculation of Circle Radius
+    print('The average circle radius made by the user: {0:.2f}m'.format(get_circle_radius(yp, zp)))
 
-    # # Calculation of revolutions per second (using velocity because it is more precise than position)
-    # print('{0:.2f} rps'.format(get_rps(yv, zv, time)))
+    # Calculation of revolutions per second (using velocity because it is more precise than position)
+    print('The average number of revolutions per second made by the user: {0:.2f} rps'.format(get_rps(yv, zv, time)))
 
     # Identifying drastic change in diameters of the circles made by the user
     changes = get_changed_circle_size(get_rps(yv, zv, time), lposition, time)
