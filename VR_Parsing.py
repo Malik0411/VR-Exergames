@@ -190,7 +190,7 @@ def get_rps(y, z, time):
     return abs((sum(angularVelocity)/len(angularVelocity))/6.2831853108075)
 
 
-def get_changed_circle_size(rps, data, time, tolerance=0.15):
+def get_changed_circle_size(rps, data, time, tolerance=0.175):
     """
         This function is used to identify when the user drastically changes the size of the circles they are making
         Sensitivity of detection can be adjusted by setting the tolerance argument
