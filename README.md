@@ -38,3 +38,9 @@ pip --no-cache-dir install mayavi
 ````$pip install PyQt5````
 
 **Note**: If you run into errors, try installing a different one. If you utilize the **mayavi-pip** method for the Mayavi installation, try activating the environment.
+
+## Other libraries
+**Install using pip**: I was able to install all other dependencies using pip without trouble. You're going to need:
+1. numpy
+2. circle_fit
+3. matplotlib
