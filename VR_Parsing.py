@@ -13,11 +13,9 @@ import csv
 import warnings
 import numpy as np
 from re import split
-from mayavi import mlab
 import circle_fit as cf
 from mayavi.mlab import *
 import matplotlib.pyplot as plt
-import scipy.spatial.distance as sp
 from Radar_Plot import radar_factory
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 
@@ -38,7 +36,7 @@ def plot_with_quiver3d(x, y, z):
     v = -x * np.sin(r) / (r + 0.001)
     w = np.zeros_like(z)
     quiver3d(x, y, z, u, v, w, line_width=3, scale_factor=1)
-    mlab.show() 
+    show() 
 
 
 def plot_with_triangular_mesh(x, y, z, n):
@@ -64,7 +62,7 @@ def plot_with_triangular_mesh(x, y, z, n):
     z = np.r_[1, z]
     t = np.r_[0, t]
     triangular_mesh(x, y, z, triangles, scalars=t)
-    mlab.show()
+    show()
 
 
 def spider_plot(n, parameters, parameter_data):
