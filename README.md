@@ -1,5 +1,5 @@
 # Virtual Reality Exergames
-A collection of the code used to analyze data collected from an OculusQuest VR headset. The purpose of the research is to aid elderly individuals with dementia, promoting the use of exercise games to support their health journey.
+A collection of the code used to analyze data collected from an OculusQuest VR headset. The purpose of the research is to promote the use of exercise games.
 
 # Dependencies
 ## Mayavi Installation
